@@ -28,7 +28,7 @@ def add_task(title, file_path=file_path):
     new_task = {
         "id": next_id,
         "title": title,
-        "status": "not done",
+        "status": "todo",
         "createdAt": current_time,
         "updatedAt": current_time
     }
@@ -66,10 +66,10 @@ def mark_task_in_progress(task_id, file_path=file_path):
 
     for task in tasks:
         if task["id"] == task_id:
-            task["status"] = "in progress"
+            task["status"] = "in-progress"
             task["updatedAt"] = get_current_timestamp()
             save_tasks(tasks, file_path)
-            print(f"Task with ID {task_id} was marked 'in progress'")
+            print(f"Task with ID {task_id} was marked 'in-progress'")
             return
     print(f"Task with ID {task_id} not found")
 
@@ -84,7 +84,14 @@ def mark_task_done(task_id, file_path=file_path):
             print(f"Task with ID {task_id} was marked 'done'")
             return
     print(f"Task with ID {task_id} not found")
-    
+
+def list_task(status_filter, file_path=file_path):
+    tasks = load_tasks(file_path)
+
+    for task in tasks:
+        if status_filter != "all" and task["status"] != status_filter:
+            continue
+        print(f"{task['title']}, status: {task['status']}")
 
 def main():
     parser = argparse.ArgumentParser(description="Task Tracker CLI")
@@ -100,8 +107,8 @@ def main():
     parser_update.add_argument("title", type=str, help="New title of the task")
 
     # Delete task
-    parser_update = subparsers.add_parser("delete", help="Delete a task")
-    parser_update.add_argument("id", type=int, help="ID of the task")
+    parser_delete = subparsers.add_parser("delete", help="Delete a task")
+    parser_delete.add_argument("id", type=int, help="ID of the task")
 
     # Mark a task as in-progress
     parser_in_progress = subparsers.add_parser("mark-in-progress", help="Mark a task as in progress")
@@ -110,6 +117,10 @@ def main():
     # Mark a task as done
     parser_done = subparsers.add_parser("mark-done", help="Mark a task as done")
     parser_done.add_argument("id", type=int, help="ID of the task")
+
+    # Listing all tasks (by status or not)
+    parser_list = subparsers.add_parser("list", help="List all the tasks")
+    parser_list.add_argument("status", type=str, choices=["done", "in-progress", "todo", "all"], nargs="?", default="all", help="Filter tasks by status (done, in-progress, todo, or all)")
 
     args = parser.parse_args()
     if args.command == "add":
@@ -122,6 +133,7 @@ def main():
         mark_task_in_progress(args.id)
     elif args.command == "mark-done":
         mark_task_done(args.id)
-    # Call appropriate functions based on `args.command`
+    elif args.command == "list":
+        list_task(status_filter=args.status)
 
 main()
